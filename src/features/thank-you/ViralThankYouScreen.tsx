@@ -9,18 +9,17 @@ import { ScrollView, StyleSheet, View, Text, Modal, TouchableOpacity, SafeAreaVi
 import { colors } from '@theme';
 import i18n from '@covid/locale/i18n';
 import { AreaStatsResponse } from '@covid/core/user/dto/UserAPIContracts';
-import { ICoreService } from '@covid/core/user/UserService';
+import { IUserService } from '@covid/core/user/UserService';
 import { ClickableText, RegularText } from '@covid/components/Text';
 import BrandedSpinner from '@covid/components/Spinner';
 import { AppRating, shouldAskForRating } from '@covid/components/AppRating';
-import { contentService } from '@covid/Services';
-import { ExternalCallout } from '@covid/components/ExternalCallout';
 import { lazyInject } from '@covid/provider/services';
 import { Services } from '@covid/provider/services.types';
 import { SymtomsCountStats } from '@covid/components/Stats/SymtomsCountStats';
 import { ContributionRank } from '@covid/components/Stats/ContributionRank';
 import { ShareAppCardViral } from '@covid/components/Cards/ShareAppViral';
 import { MoreContribution } from '@covid/components/Stats/MoreContribution';
+import { IContentService } from '@covid/core/content/ContentService';
 
 import { ScreenParamList } from '../ScreenParamList';
 
@@ -128,21 +127,23 @@ const ThankYouModal: React.FC<{
 
 export default class ViralThankYouScreen extends Component<Props, State> {
   @lazyInject(Services.User)
-  private userService: ICoreService;
+  private userService: IUserService;
 
+  @lazyInject(Services.Content)
+  private contentService: IContentService;
   state = { ...initalState };
 
   async componentDidMount() {
     if (await shouldAskForRating()) {
       this.setState({ askForRating: true });
     }
-    this.getAreaStats();
+    await this.getAreaStats();
   }
 
   async getAreaStats() {
     try {
       const profile = await this.userService.getProfile();
-      const response = await contentService.getAreaStats(profile!.patients[0]);
+      const response = await this.contentService.getAreaStats(profile!.patients[0]);
       this.setState({
         areaStats: {
           ...response,
